@@ -1,6 +1,7 @@
 "apt extensions"
 
 load("@bazel_features//:features.bzl", "bazel_features")
+load("@package_metadata//purl:purl.bzl", "purl")
 load("//apt/private:deb_import.bzl", "deb_import")
 load("//apt/private:deb_resolve.bzl", "deb_resolve", "internal_resolve")
 load("//apt/private:deb_translate_lock.bzl", "deb_translate_lock")
@@ -41,10 +42,19 @@ def _distroless_extension(module_ctx):
                     package["arch"],
                 )
 
+                purl_builder = purl.builder() \
+                    .type("deb") \
+                    .namespace("debian") \
+                    .name(package["name"]) \
+                    .version(package["version"]) \
+                    .add_qualifier("arch", package["arch"]) \
+                    .build()
+
                 deb_import(
                     name = "%s_%s" % (install.name, package_key),
                     urls = package["urls"],
                     sha256 = package["sha256"],
+                    purl = purl_builder,
                     mergedusr = install.mergedusr,
                 )
 
