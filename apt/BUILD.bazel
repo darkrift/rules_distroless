@@ -23,6 +23,7 @@ bzl_library(
         "//apt/private:apt_dep_resolver",
         "//apt/private:deb_filemap",
         "//apt/private:deb_import",
+        "//apt/private:dependency_edges",
         "//apt/private:lockfile",
         "//apt/private:pgp",
         "//apt/private:translate_dependency_set",

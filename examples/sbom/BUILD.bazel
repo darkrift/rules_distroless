@@ -3,7 +3,8 @@
 Every package imported with `apt.install` carries a `package_metadata` (PURL)
 attribute on its `:data` target. The `sbom` aspect walks the dependency graph
 of a package and reports each deb as a component. The `diff_test` checks the
-generated CycloneDX report, and so the PURLs, against a golden file.
+generated CycloneDX report, and so the PURLs and the direct dependency
+graph between the packages, against a golden file.
 
     bazel test //sbom:bash_cyclonedx_test
 
