@@ -24,10 +24,18 @@ package_metadata(
 )
 
 deb_postfix(
-    name = "data",
+    name = "layer",
     srcs = glob(["data.tar*"]),
     outs = ["content.tar.gz"],
     mergedusr = {mergedusr},
+)
+
+# The direct dependencies are runfiles only: they link the packages in
+# dependency graphs such as SBOMs without adding their content to the layer.
+filegroup(
+    name = "data",
+    srcs = [":layer"],
+    data = {dependencies},
     visibility = ["//visibility:public"],
     package_metadata = [
         ":package_metadata",
@@ -507,6 +515,7 @@ def _deb_import_impl(rctx):
         foreign_symlinks = foreign_symlinks,
         symlink_outs = symlinks.keys(),
         purl = repr(rctx.attr.purl),
+        dependencies = ["@" + dep + "//:data" for dep in rctx.attr.dependencies],
     ))
 
     # Bazel < 8.3.0 has no repo_metadata.
@@ -519,6 +528,7 @@ deb_import = repository_rule(
         "urls": attr.string_list(mandatory = True, allow_empty = False),
         "sha256": attr.string(),
         "depends_on": attr.string_list(doc = "Names of packages this package depends on"),
+        "dependencies": attr.string_list(doc = "Repository names of the packages this one directly depends on (acyclic, transitively reduced), linked to `:data` for dependency graphs."),
         "dep_filemaps": attr.label_list(doc = "Each dependency's filemap.json, in depends_on order, used to resolve cross-package symlinks."),
         "mergedusr": attr.bool(),
         "target_name": attr.string(),

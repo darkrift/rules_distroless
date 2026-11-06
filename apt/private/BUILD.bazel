@@ -63,6 +63,12 @@ bzl_library(
 )
 
 bzl_library(
+    name = "dependency_edges",
+    srcs = ["dependency_edges.bzl"],
+    visibility = ["//apt:__subpackages__"],
+)
+
+bzl_library(
     name = "deb_import",
     srcs = ["deb_import.bzl"],
     visibility = ["//apt:__subpackages__"],

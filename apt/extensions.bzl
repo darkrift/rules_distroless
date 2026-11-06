@@ -6,6 +6,7 @@ load("//apt/private:apt_deb_repository.bzl", "deb_repository")
 load("//apt/private:apt_dep_resolver.bzl", "dependency_resolver")
 load("//apt/private:deb_filemap.bzl", "deb_filemap")
 load("//apt/private:deb_import.bzl", "deb_import")
+load("//apt/private:dependency_edges.bzl", "direct_dependencies")
 load("//apt/private:lockfile.bzl", "lockfile")
 load("//apt/private:pgp.bzl", "pgp")
 load("//apt/private:translate_dependency_set.bzl", "check_template_variable_collision", "translate_dependency_set")
@@ -665,6 +666,8 @@ def _distroless_extension(mctx):
             package_templates = json.encode(depset_templates),
         )
 
+    dependency_edges = direct_dependencies(glock.packages())
+
     # Generate a repo per package which will be aliased by hub repo.
     for (package_key, package) in glock.packages().items():
         (suite, name, arch, version) = lockfile.parse_package_key(package_key)
@@ -700,6 +703,10 @@ def _distroless_extension(mctx):
                 sha256 = package["sha256"],
                 mergedusr = mergedusr,
                 depends_on = package["depends_on"],
+                dependencies = [
+                    util.package_repo_name(dep, mergedusr = mergedusr)
+                    for dep in dependency_edges[package_key]
+                ],
                 # Dependency filemaps retain resolver order.
                 dep_filemaps = [
                     "@" + util.sanitize(dep) + "_filemap//:filemap.json"
@@ -895,6 +902,16 @@ required for repositories that do not serve an `Origin` field. SBOM tools
 conventionally use the distribution a package belongs to as the vendor, so for
 third-party repositories layered on a distribution (Docker, PPAs, ...) the base
 distribution (`debian`, `ubuntu`) is usually the right explicit value.
+
+### Dependency graph
+
+The `:data` target of a package also links the packages it directly depends on,
+so dependency graphs such as SBOMs report package-to-package relationships and
+not only a flat list. The lockfile records the transitive closure; the direct
+edges are derived from it, keeping the graph acyclic (Debian allows dependency
+cycles such as `libc6` and `libgcc-s1`, Bazel does not) by keeping one direction
+of each cycle and dropping an edge already implied by another dependency. The
+links do not add the dependencies' content to the layer.
 
 The root module can require derived vendors to be `debian` or `ubuntu`, so that
 third-party repositories (whose `Origin` is their own name) must declare their

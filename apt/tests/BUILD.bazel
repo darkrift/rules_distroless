@@ -1,4 +1,5 @@
 load(":deb_postfix_test.bzl", "deb_postfix_tests")
+load(":dependency_edges_test.bzl", "dependency_edges_tests")
 load(":dpkg_status_test.bzl", "dpkg_status_tests")
 load(":dpkg_statusd_test.bzl", "dpkg_statusd_tests")
 load(":extensions_test.bzl", "extensions_tests")
@@ -14,6 +15,8 @@ load(":version_test.bzl", "version_tests")
 version_tests()
 
 deb_postfix_tests()
+
+dependency_edges_tests()
 
 dpkg_status_tests()
 
